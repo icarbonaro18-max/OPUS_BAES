@@ -86,7 +86,7 @@ button{touch-action:manipulation}
 .hidden{display:none!important}
 
 /* EXPORT DOCUMENT */
-#exportRoot{position:fixed;left:-30000px;top:0;width:1123px;background:#fff;color:#111;z-index:-1}
+#exportRoot{position:absolute;left:0;top:0;width:1123px;background:#fff;color:#111;z-index:-9999;pointer-events:none}
 .pdf-page{width:297mm;height:210mm;padding:9mm 11mm 8mm;background:#fff;position:relative;overflow:hidden;page-break-after:always;font-family:Arial,Helvetica,sans-serif}
 .pdf-page:last-child{page-break-after:auto}
 .pdf-header{height:20mm;display:grid;grid-template-columns:45mm 1fr 25mm;align-items:center;border-bottom:.5mm solid #1c2a39;padding-bottom:3mm}
@@ -439,17 +439,48 @@ function buildExport(){
  });
  root.innerHTML=html;return root;
 }
+async function waitForExportImages(root){
+ const imgs=[...root.querySelectorAll('img')];
+ await Promise.all(imgs.map(img=>{
+   if(img.complete&&img.naturalWidth>0)return Promise.resolve();
+   return new Promise(resolve=>{const done=()=>resolve();img.addEventListener('load',done,{once:true});img.addEventListener('error',done,{once:true});setTimeout(done,4000);});
+ }));
+}
+async function generatePdfBlob(){
+ const root=buildExport();
+ root.style.position='absolute';root.style.left='0';root.style.top='0';root.style.zIndex='-9999';root.style.pointerEvents='none';root.style.background='#fff';
+ await waitForExportImages(root);
+ await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+ if(typeof html2canvas==='undefined')throw new Error('Moteur de rendu PDF indisponible');
+ const JsPDF=(window.jspdf&&window.jspdf.jsPDF)?window.jspdf.jsPDF:window.jsPDF;
+ if(!JsPDF)throw new Error('Moteur jsPDF indisponible');
+ const pages=[...root.querySelectorAll('.pdf-page')];
+ if(!pages.length)throw new Error('Aucune page à générer');
+ const pdf=new JsPDF({orientation:'landscape',unit:'mm',format:'a4',compress:true});
+ for(let i=0;i<pages.length;i++){
+   const page=pages[i];
+   const canvas=await html2canvas(page,{scale:1.45,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',logging:false,windowWidth:page.scrollWidth,windowHeight:page.scrollHeight,scrollX:0,scrollY:0});
+   const img=canvas.toDataURL('image/jpeg',0.94);
+   if(i>0)pdf.addPage('a4','landscape');
+   pdf.addImage(img,'JPEG',0,0,297,210,undefined,'FAST');
+ }
+ return pdf.output('blob');
+}
 async function generatePdf(){
  const btn=document.getElementById('pdfBtn');btn.disabled=true;btn.textContent='Génération en cours...';saveState();
  try{
-  const root=buildExport();await new Promise(r=>setTimeout(r,350));
-  if(typeof html2pdf==='undefined')throw new Error('Bibliothèque PDF indisponible');
   const filename=safeName(`${val('reference')||'Attestation_BAES'}_${val('client')||''}`)+'.pdf';
-  const worker=html2pdf().set({margin:0,filename,image:{type:'jpeg',quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4',orientation:'landscape'},pagebreak:{mode:['css','legacy']}}).from(root).toPdf();
-  const blob=await worker.outputPdf('blob');const file=new File([blob],filename,{type:'application/pdf'});
-  if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Attestation BAES OPUS ELEC'});}else{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
- }catch(err){alert("La génération directe n'a pas pu démarrer. Utilisez le bouton « Imprimer / PDF » ; sur la tablette, choisissez ensuite Enregistrer en PDF.\n\nDétail : "+err.message);}
- finally{btn.disabled=false;btn.textContent='Générer / partager le PDF';}
+  const blob=await generatePdfBlob();
+  if(!blob||blob.size<5000)throw new Error('Le PDF généré est anormalement vide');
+  const file=new File([blob],filename,{type:'application/pdf'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    await navigator.share({files:[file],title:'Attestation BAES OPUS ELEC'});
+  }else{
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+  }
+ }catch(err){
+  alert("La génération directe n'a pas pu aboutir. Utilisez le bouton « Imprimer / PDF » en dépannage.\n\nDétail : "+err.message);
+ }finally{btn.disabled=false;btn.textContent='Générer / partager le PDF';}
 }
 document.getElementById('pdfBtn').addEventListener('click',generatePdf);
 document.getElementById('printBtn').addEventListener('click',()=>{buildExport();setTimeout(()=>window.print(),250);});
