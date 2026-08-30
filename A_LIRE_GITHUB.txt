@@ -1,0 +1,3 @@
+Déposer tous les fichiers de ce dossier à la racine du dépôt GitHub correspondant.
+Remplacer index.html, puis Commit changes et attendre le redéploiement GitHub Pages.
+Ensuite supprimer l'ancien raccourci de l'écran d'accueil et le recréer afin de récupérer l'icône.
