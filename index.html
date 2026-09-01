@@ -208,12 +208,12 @@ button{touch-action:manipulation}
    <button class="btn btn-secondary" id="addRemoteBtn" type="button">+ Ajouter une télécommande</button>
    <button class="btn btn-primary" id="projectsBtn" type="button">Mes dossiers</button>
    <button class="btn btn-success" id="pdfBtn" type="button">Exporter</button>
-   <button class="btn btn-ghost" id="printBtn" type="button">Ouvrir / imprimer le PDF</button>
+   <button class="btn btn-ghost" id="printBtn" type="button">Aperçu PDF</button>
    <button class="btn btn-danger" id="resetBtn" type="button">Nouveau dossier</button>
   </div>
   <div class="save-status" id="saveStatus">Prêt</div>
-  <div class="save-status" style="font-weight:600">PDF client sans adresse GitHub : utiliser « Générer / partager » ou « Ouvrir / imprimer ».</div>
-  <div class="save-status" style="min-width:auto;color:#0b4a8b;font-weight:700">PDF autonome v7.0 - dossiers modifiables</div>
+  <div class="save-status" style="font-weight:600">PDF client : utilisez « Aperçu PDF » pour contrôler le rendu, puis « Exporter » pour l’envoi final.</div>
+  <div class="save-status" style="min-width:auto;color:#0b4a8b;font-weight:700">PDF autonome v7.1 - aperçu PDF - dossiers modifiables</div>
  </div>
 </div>
 
@@ -1191,19 +1191,16 @@ async function openPdfForPrint(){
       preview.location.replace(url);
       setTimeout(()=>URL.revokeObjectURL(url),300000);
     }else{
-      const file=new File([blob],filename,{type:'application/pdf'});
-      if(navigator.canShare&&navigator.canShare({files:[file]})){
-        await navigator.share({files:[file],title:'Attestation BAES OPUS ELEC'});
-        URL.revokeObjectURL(url);
-      }else{
-        const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
-      }
+      const a=document.createElement('a');
+      a.href=url;a.target='_blank';a.rel='noopener';
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),300000);
     }
   }catch(err){
     if(preview&&!preview.closed)preview.close();
     console.error(err);alert(`L'ouverture du PDF a échoué.\n\nDétail : ${err.message||err}`);
   }finally{
-    btn.disabled=false;btn.textContent='Ouvrir / imprimer le PDF';
+    btn.disabled=false;btn.textContent='Aperçu PDF';
   }
 }
 document.getElementById('printBtn').addEventListener('click',openPdfForPrint);
