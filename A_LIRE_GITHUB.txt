@@ -1,3 +1,18 @@
-Déposer tous les fichiers de ce dossier à la racine du dépôt GitHub correspondant.
-Remplacer index.html, puis Commit changes et attendre le redéploiement GitHub Pages.
-Ensuite supprimer l'ancien raccourci de l'écran d'accueil et le recréer afin de récupérer l'icône.
+OPUS ELEC - CONTROLE BAES v7.0 - DOSSIERS MODIFIABLES
+
+NOUVEAUTES
+- Plusieurs attestations peuvent être enregistrées sans s'écraser.
+- Le bouton Mes dossiers permet d'ouvrir, dupliquer, renommer, exporter ou supprimer un dossier.
+- Le bouton Exporter propose : PDF final, dossier modifiable OPUS, ou les deux fichiers.
+- Un dossier modifiable .opusbaes peut être rangé dans OneDrive puis réimporté plus tard sur n'importe quel appareil.
+- L'ancien brouillon v6 est récupéré automatiquement lors de la première ouverture de la v7.
+
+MISE A JOUR GITHUB
+1. Déposer tous les fichiers de ce dossier à la racine du dépôt OPUS_BAES.
+2. Remplacer les anciens fichiers, puis Commit changes.
+3. Attendre le redéploiement GitHub Pages.
+4. Fermer complètement l'application puis la rouvrir.
+
+CONSEIL
+A la fin de chaque chantier, utiliser Exporter > PDF + dossier modifiable, puis ranger les deux fichiers dans OneDrive.
+Le PDF est destiné au client. Le fichier .opusbaes est la sauvegarde source OPUS ELEC.
